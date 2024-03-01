@@ -1,5 +1,8 @@
-document.querySelector('#app').innerHTML = `
-<section class="section">
+import { getCurrentPosition, overpassCall } from './lib/overpass.js';
+import { GeoPoint } from './lib/geopoint.js';
+
+document.querySelector('#app').innerHTML = 
+`<section class="section">
 <div class="container">
   <h1 class="title">
     Darf Ich Hier Kiffen?
@@ -8,12 +11,9 @@ document.querySelector('#app').innerHTML = `
     Is is legal to smoke canabis?
   </p>
 </div>
-</section>
-`
-
+</section>`
  
-window.onload(() => {
-    getCurrentPosition()
+getCurrentPosition()
 .then(r => {
   const currentPos = new GeoPoint(r.latitude, r.longitude)
   const boundingBox = currentPos.boundingCoordinates(0.3, true, true)
@@ -25,9 +25,5 @@ window.onload(() => {
 })
 .then(bbox => {
     overpassCall(bbox[0], bbox[1], bbox[2], bbox[3])
-      .then(res => {
-        console.log(res.json())
-      })
-    
+      .then(res => console.log(res.json()))
 }) 
-})

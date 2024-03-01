@@ -12,11 +12,15 @@ development
 --------
 
 local work
- - <todo>
+  
+    npm run dev # runs the dev server
+    npm run build # creates a prod build ( -> /dist)
 
 cicd
- - <todo>
+ - not avail at the moment
 
 how it works
 ------------
-- <todo>
+
+- asks for your geolocation
+- requests objects near you that might prohibit you smoking from openstreetmap
