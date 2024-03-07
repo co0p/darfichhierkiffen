@@ -50,7 +50,7 @@ export class MainApp extends HTMLElement {
 
         locationService.getCurrentPosition()
             .then(currentPos => {
-                const boundingBox = currentPos.boundingCoordinates(0.3, true, true)
+                const boundingBox = currentPos.boundingCoordinates(0.2, true, true)
                 console.log(currentPos, boundingBox)
                 return [
                     boundingBox[0].latitude(), boundingBox[0].longitude(),
