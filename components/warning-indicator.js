@@ -44,7 +44,7 @@ export class WarningIndicator extends HTMLElement {
             textEl.innerText = 'Is voll ok'
         } else {
             leaf.classList.add('is-danger');
-            textEl.innerText = 'Las mal sein'
+            textEl.innerText = 'Lass mal sein'
         }
     }
    
