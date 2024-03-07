@@ -37,7 +37,9 @@ export class WarningIndicator extends HTMLElement {
         
         leaf.classList.remove('is-success');
         leaf.classList.remove('is-danger');
-        if (this.allowed) {
+        
+
+        if (this.allowed === 'true') {
             leaf.classList.add('is-success');
             textEl.innerText = 'Is voll ok'
         } else {
