@@ -1,11 +1,13 @@
-import { overpassCall } from '../lib/overpass.js';
 import { locationService } from '../lib/locationService.js';
 import './object-counter.js';
 import './warning-indicator.js';
+import { osmService } from '../lib/osmService.js';
+import { Location } from '../lib/location.js';
+
+const HUNDRED_M_IN_KM = 0.1;
 
 // main app not using shadowRoot, because it shadowroot cannot be nested?
 export class MainApp extends HTMLElement {
-    static observedAttributes = ["playgrounds"];
 
     allowed = false;
     schools = 0;
@@ -16,10 +18,10 @@ export class MainApp extends HTMLElement {
     constructor() {
         self = super();
         this.allowed = false;
-        this.schools = 1;
-        this.playgrounds = 1;
-        this.youthcenters = 1;
-        this.kindergardens = 1;
+        this.schools = 0;
+        this.playgrounds = 0;
+        this.youthcenters = 0;
+        this.kindergardens = 0;
     }
 
     connectedCallback() {
@@ -46,57 +48,47 @@ export class MainApp extends HTMLElement {
     </div>`
     }
 
-    fetchLocation() {
+    async fetchLocation() {
 
-        locationService.getCurrentPosition()
-            .then(currentPos => {
-                const boundingBox = currentPos.boundingCoordinates(0.2, true, true)
-                console.log(currentPos, boundingBox)
-                return [
-                    boundingBox[0].latitude(), boundingBox[0].longitude(),
-                    boundingBox[1].latitude(), boundingBox[1].longitude(),
-                ];
-            })
-            .then(bbox => {
-                // refactor to use geopoints
-                overpassCall(bbox[0], bbox[1], bbox[2], bbox[3])
-                    .then(res => {
-                        return res.json();
-                    })
-                    .then(res => {
-                        console.log(res)
+        let currentPos = await locationService.getCurrentPosition()
+        const boundingBox = currentPos.boundingCoordinates(0.4, true, true)
 
-                        if (res.elements.length == 0) return;
-                        this.playgrounds = 0;
-                        this.schools = 0;
-                        this.youthcenters = 0;
-                        this.kindergardens = 0;
+        let locations = await osmService.getLocations(boundingBox)
+        if (locations.length == 0) return;
+        
+        this.playgrounds = 0;
+        this.schools = 0;
+        this.youthcenters = 0;
+        this.kindergardens = 0;
 
-                        res.elements.forEach(element => {
-                            if (element.tags.leisure && element.tags.leisure == 'playground') {
-                                this.playgrounds++;
-                            };
-                            if (element.tags.amenity && element.tags.amenity == 'school') {
-                                this.schools++;
-                            };
-                            if (element.tags.amenity && element.tags.amenity == 'kindergarden') {
-                                this.kindergardens++;
-                            };
-                            if (element.tags.amenity && element.tags.community_centre == 'youth_centre') {
-                                this.youthcenters++;
-                            };
-                        });
+        // TODO etract to method 
+        for (let l of locations) {
+            if (l.distanceTo(currentPos) > HUNDRED_M_IN_KM) {
+                continue;
+            }
 
-                        if (this.playgrounds + this.kindergardens + this.schools + this.youthcenters == 0) {
-                            this.allowed = true;
-                        }  else {
-                            this.allowed = false;
-                        }
-                    })
-                    .finally(_ => this.render()
-                    )
+            if (l.type === Location.PLAYGROUND) {
+                this.playgrounds++;
+            }
+            if (l.type === Location.SCHOOL) {
+                this.schools++;
+            }
+            if (l.type === Location.KINDERGARDEN) {
+                this.kindergardens++;
+            }
+            if (l.type === Location.YOUTH_CENTRE) {
+                this.youthcenters++;
+            }
+        }
 
-            })
+        // TODO: extract to method
+        if (this.playgrounds + this.kindergardens + this.schools + this.youthcenters == 0) {
+            this.allowed = true;
+        } else {
+            this.allowed = false;
+        }
+
+        this.render()
 
     }
 }
