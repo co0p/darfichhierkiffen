@@ -1,6 +1,7 @@
 import { locationService } from '../lib/locationService.js';
 import './object-counter.js';
 import './warning-indicator.js';
+import './location-map.js';
 import { osmService } from '../lib/osmService.js';
 import { Location } from '../lib/location.js';
 
@@ -44,6 +45,7 @@ export class MainApp extends HTMLElement {
     
         <warning-indicator allowed=${this.allowed}></warning-indicator>
         <object-counter schools=${this.schools} playgrounds=${this.playgrounds} youthcenters=${this.youthcenters} kindergardens=${this.kindergardens}></object-counter>
+        <location-map></location-map>
     
     </div>`
     }
