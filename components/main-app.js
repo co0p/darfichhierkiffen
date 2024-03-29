@@ -7,7 +7,7 @@ import { Location } from '../lib/location.js';
 
 const HUNDRED_M_IN_KM = 0.1;
 
-// main app not using shadowRoot, because it shadowroot cannot be nested?
+// main app not using shadowRoot, because it's shadowroot cannot be nested?
 export class MainApp extends HTMLElement {
 
     allowed = false;
@@ -38,7 +38,7 @@ export class MainApp extends HTMLElement {
                     Darf Ich Hier Kiffen?
                 </h1>
                 <p class="subtitle">
-                    Is is legal to smoke canabis?
+                    Is it legal to smoke canabis?
                 </p>
             </div>
         </section>
@@ -56,14 +56,19 @@ export class MainApp extends HTMLElement {
         const boundingBox = currentPos.boundingCoordinates(0.4, true, true)
 
         let locations = await osmService.getLocations(boundingBox)
-        if (locations.length == 0) return;
         
+        if (locations.length == 0) {
+            this.allowed = true;
+            this.render();
+            return;
+        }
+
         this.playgrounds = 0;
         this.schools = 0;
         this.youthcenters = 0;
         this.kindergardens = 0;
 
-        // TODO etract to method 
+        // TODO extract to method 
         for (let l of locations) {
             if (l.distanceTo(currentPos) > HUNDRED_M_IN_KM) {
                 continue;
@@ -83,15 +88,8 @@ export class MainApp extends HTMLElement {
             }
         }
 
-        // TODO: extract to method
-        if (this.playgrounds + this.kindergardens + this.schools + this.youthcenters == 0) {
-            this.allowed = true;
-        } else {
-            this.allowed = false;
-        }
-
+        this.allowed = (this.playgrounds + this.kindergardens + this.schools + this.youthcenters == 0)
         this.render()
-
     }
 }
 
