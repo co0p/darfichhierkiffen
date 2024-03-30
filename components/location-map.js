@@ -8,6 +8,15 @@ template.innerHTML = html
 
 export class LocationMap extends HTMLElement {
 
+    map = null;
+    marker = null;
+
+    latitude = 0;
+    longitude = 0;
+
+    static get observedAttributes() {
+        return ['longitude', 'latitude'];
+    }
 
     connectedCallback() {
         this.el = this.attachShadow({ mode: 'open' });
@@ -20,24 +29,42 @@ export class LocationMap extends HTMLElement {
     attachMap() {
         let container = this.el.getElementById('map');
         window.container = container
-        var map = L.map(container).setView([51.505, -0.09], 16);
+        this.map = L.map(container).setView([this.latitude, this.longitude], 16);
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
             minZoom: 16,
             maxZoom: 16,
-        }).addTo(map);
+        }).addTo(this.map);
 
         // disable interactions
-        map.dragging.disable();
-        map.touchZoom.disable();
-        map.doubleClickZoom.disable();
-        map.scrollWheelZoom.disable();
-        map.boxZoom.disable();
-        map.keyboard.disable();
-        if (map.tap) map.tap.disable();
+        this.map.dragging.disable();
+        this.map.touchZoom.disable();
+        this.map.doubleClickZoom.disable();
+        this.map.scrollWheelZoom.disable();
+        this.map.boxZoom.disable();
+        this.map.keyboard.disable();
+        if (this.map.tap) map.tap.disable();
 
         // position map based on geo
-        map.locate({ setView: true, maxZoom: 16 });
+       //  map.locate({ setView: true, maxZoom: 16 });
+
+        // add the marker circle
+        this.marker = L.circle([this.latitude, this.longitude], {
+            color: 'green',
+            fillColor: 'green',
+            fillOpacity: 0.5,
+            radius: 100
+        }).addTo(this.map);
+    }
+
+    attributeChangedCallback(property, oldValue, newValue) {
+        if (oldValue === newValue) return;
+        this[property] = newValue;
+
+        this.map.setView([this.latitude, this.longitude], 16)
+        this.circle.setLatLng([this.latitude, this.longitude])
+
+        console.log(this.latitude, this.longitude)
     }
 }
 

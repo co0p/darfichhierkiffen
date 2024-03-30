@@ -16,6 +16,9 @@ export class MainApp extends HTMLElement {
     youthcenters = 0;
     kindergardens = 0;
 
+    longitude = null;
+    latitude = null;
+
     constructor() {
         self = super();
         this.allowed = false;
@@ -45,7 +48,7 @@ export class MainApp extends HTMLElement {
     
         <warning-indicator allowed=${this.allowed}></warning-indicator>
         <object-counter schools=${this.schools} playgrounds=${this.playgrounds} youthcenters=${this.youthcenters} kindergardens=${this.kindergardens}></object-counter>
-        <location-map></location-map>
+        <location-map latitude=${this.latitude} longitude=${this.longitude}></location-map>
     
     </div>`
     }
@@ -53,8 +56,10 @@ export class MainApp extends HTMLElement {
     async fetchLocation() {
 
         let currentPos = await locationService.getCurrentPosition()
-        const boundingBox = currentPos.boundingCoordinates(0.4, true, true)
+        this.latitude = currentPos.latitude();
+        this.longitude = currentPos.longitude();
 
+        const boundingBox = currentPos.boundingCoordinates(0.4, true, true)
         let locations = await osmService.getLocations(boundingBox)
         
         if (locations.length == 0) {
