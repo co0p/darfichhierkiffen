@@ -10,20 +10,61 @@ export class LocationMap extends HTMLElement {
 
     map = null;
     marker = null;
+    layerGroup = null;
 
     latitude = 0;
     longitude = 0;
+
+    _locations = [];
 
     static get observedAttributes() {
         return ['longitude', 'latitude'];
     }
 
+    constructor() {
+        super();
+        this.layerGroup = L.layerGroup();
+    }
+
+    // for simple values
     connectedCallback() {
         this.el = this.attachShadow({ mode: 'open' });
         let tmpt = template.content.cloneNode(true);
         this.el.append(tmpt)
 
         this.attachMap()
+    }
+
+    // for reacting to complex value setting
+    set locations(locs) {
+
+        for (let entry of locs) {
+            let geometry = entry.geometry
+
+
+            if (geometry.length == 1) {
+                L.circle(geometry[0].latlong, {
+                    color: 'red',
+                    fillColor: 'red',
+                    fillOpacity: 0.5,
+                    radius: 20,
+                }).addTo(this.layerGroup);
+            }
+
+            if (geometry.length > 1) {
+
+                let latLongs = [];
+                geometry.forEach(e => {
+                    latLongs.push(e.latlong)
+                })
+
+                L.polygon(latLongs, {
+                    color: 'red',
+                    fillColor: 'red',
+                    fillOpacity: 0.5,
+                }).addTo(this.layerGroup);
+            }
+        }
     }
 
     attachMap() {
@@ -45,8 +86,21 @@ export class LocationMap extends HTMLElement {
         this.map.keyboard.disable();
         if (this.map.tap) map.tap.disable();
 
-        // position map based on geo
-       //  map.locate({ setView: true, maxZoom: 16 });
+
+        // create a new layer for easy removal of added markers
+        this.layerGroup.addTo(this.map);
+    }
+
+    attributeChangedCallback(property, oldValue, newValue) {
+        if (oldValue === newValue) return;
+        this[property] = newValue;
+
+        if (this.map) {
+            this.map.setView([this.latitude, this.longitude], 16);
+
+            this.map.removeLayer(this.layerGroup);
+            this.layerGroup.addTo(this.map);
+        }
 
         // add the marker circle
         this.marker = L.circle([this.latitude, this.longitude], {
@@ -54,17 +108,7 @@ export class LocationMap extends HTMLElement {
             fillColor: 'green',
             fillOpacity: 0.5,
             radius: 100
-        }).addTo(this.map);
-    }
-
-    attributeChangedCallback(property, oldValue, newValue) {
-        if (oldValue === newValue) return;
-        this[property] = newValue;
-
-        this.map.setView([this.latitude, this.longitude], 16)
-        this.circle.setLatLng([this.latitude, this.longitude])
-
-        console.log(this.latitude, this.longitude)
+        }).addTo(this.layerGroup);
     }
 }
 

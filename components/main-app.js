@@ -16,6 +16,8 @@ export class MainApp extends HTMLElement {
     youthcenters = 0;
     kindergardens = 0;
 
+    locations = [];
+
     longitude = null;
     latitude = null;
 
@@ -28,6 +30,7 @@ export class MainApp extends HTMLElement {
         this.kindergardens = 0;
     }
 
+
     connectedCallback() {
         this.render();
         this.fetchLocation();
@@ -35,22 +38,25 @@ export class MainApp extends HTMLElement {
 
     render() {
         self.innerHTML = `<div>
-        <section class="section">
-            <div class="container">
-                <h1 class="title">
-                    Darf Ich Hier Kiffen?
-                </h1>
-                <p class="subtitle">
-                    Is it legal to smoke canabis?
-                </p>
-            </div>
-        </section>
-    
-        <warning-indicator allowed=${this.allowed}></warning-indicator>
-        <object-counter schools=${this.schools} playgrounds=${this.playgrounds} youthcenters=${this.youthcenters} kindergardens=${this.kindergardens}></object-counter>
-        <location-map latitude=${this.latitude} longitude=${this.longitude}></location-map>
-    
-    </div>`
+            <section class="section">
+                <div class="container">
+                    <h1 class="title">
+                        Darf Ich Hier Kiffen?
+                    </h1>
+                    <p class="subtitle">
+                        Is it legal to smoke canabis?
+                    </p>
+                </div>
+            </section>
+        
+            <warning-indicator allowed=${this.allowed}></warning-indicator>
+            <object-counter schools=${this.schools} playgrounds=${this.playgrounds} youthcenters=${this.youthcenters} kindergardens=${this.kindergardens}></object-counter>
+            <location-map latitude=${this.latitude} longitude=${this.longitude}></location-map>
+        
+        </div>`
+
+        let map = this.querySelector('location-map');
+        map.locations = this.locations;
     }
 
     async fetchLocation() {
@@ -59,10 +65,16 @@ export class MainApp extends HTMLElement {
         this.latitude = currentPos.latitude();
         this.longitude = currentPos.longitude();
 
-        const boundingBox = currentPos.boundingCoordinates(0.4, true, true)
-        let locations = await osmService.getLocations(boundingBox)
+        const boundingBox = currentPos.boundingCoordinates(HUNDRED_M_IN_KM, true, true)
+
+        this.locations = [];
+        try {
+            this.locations = await osmService.getLocations(boundingBox)
+        } catch (err) {
+            console.log('failed to fetch locations', err);
+        }
         
-        if (locations.length == 0) {
+        if (this.locations.length == 0) {
             this.allowed = true;
             this.render();
             return;
@@ -74,7 +86,7 @@ export class MainApp extends HTMLElement {
         this.kindergardens = 0;
 
         // TODO extract to method 
-        for (let l of locations) {
+        for (let l of this.locations) {
             if (l.distanceTo(currentPos) > HUNDRED_M_IN_KM) {
                 continue;
             }
